@@ -68,73 +68,61 @@
     <!-- Page Content -->
     <div class="container">
 
-      <!-- Call to Action Well -->
-      <div class="row">
-          <div class="col-lg-12">
-              <div class="well text-center">
-                  <h1>Καλώς ορίσατε στο video hosting του sxoleio.pw</h1>
-              </div>
-          </div>
-          <!-- /.col-lg-12 -->
-      </div>
-      <!-- /.row -->
-
         <!-- Heading Row -->
         <div class="row">
-            <div class="col-md-8">
-                <img class="img-responsive img-rounded" src="{{ url_for('static', filename='images/front_page_img.jpg') }}" alt="">
+            <div class="col-md-10">
+              Description<br>
+                {% if video!=-1 %}
+                        <video width="{{ video[3] }}" height="{{ video[4] }}" controls>
+                            <source src="{{ url_for('static', filename='videos/' + video[5]) }}" type='video/ogg; codecs="theora, vorbis"'>
+                        </video>
+                {% else %}
+                    <img class="img-responsive img-rounded" src="http://placehold.it/900x350" alt="">
+                {% endif %}
             </div>
-            <!-- /.col-md-8 -->
-            <div class="col-md-4">
-                <h1>Video Hosting</h1>
-                <p>Εδώ μπορείτε να βρείτε όλα τα βίντεο βοήθειας για το μάθημα των Τ.Π.Ε. Ξεκινήστε διαλέγοντας την τάξη, την κατηγορία ή τη λέξη κλειδί του βίντεο που σας ενδιαφέρει!</p>
-                <h1><span class="label label-default">sxoleio.pw</span></h1>
+            <!-- /.col-md-12 -->
+            <div class="col-md-2">
+              Περιγραφή:<br>
+              Τάξη:<br>
+              Κατηγορία:<br>
+              Tags:<br>
             </div>
-            <!-- /.col-md-4 -->
         </div>
         <!-- /.row -->
 
         <hr>
 
+        <!-- Call to Action Well -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="well text-center">
+                    {% if (video) %}
+                      Filename: {{ video[5] }}
+                    {% endif %}
+                </div>
+            </div>
+            <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+
         <!-- Content Row -->
         <div class="row">
-          <div class="col-md-4">
-              <h2>Τάξεις</h2>
-              <p>
-                {% if t_taxeis %}
-                    <ul class="list-group">
-                    {% for taxi in t_taxeis %}
-                      <li class="list-group-item"><a href="/taxi/{{ taxi[0] }}">{{ taxi[1] }}</a> <span class="badge">{{ taxi[2] }}</span></li>
-                    {% endfor %}
-                    </ul>
-                {% endif %}
-              </p>
-          </div>
-          <!-- /.col-md-4 -->
             <div class="col-md-4">
-                <h2>Κατηγορίες</h2>
-                <p>
-                  {% if t_categories %}
-                      <ul class="list-group">
-                      {% for category in t_categories %}
-                        <li class="list-group-item"><a href="/category/{{ category[0] }}">{{ category[1] }}</a> <span class="badge">{{ category[2] }}</span></li>
-                      {% endfor %}
-                      </ul>
-                  {% endif %}
-                </p>
+                <h2>Heading 1</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
             </div>
             <!-- /.col-md-4 -->
             <div class="col-md-4">
-                <h2>Λέξεις Κλειδιά</h2>
-                <p>
-                  {% if t_keywords %}
-                      <ul class="list-group">
-                      {% for keyword in t_keywords %}
-                        <li class="list-group-item"><a href="/keyword/{{ keyword[0] }}">{{ keyword[1] }}</a><span class="badge">{{ keyword[2] }}</span></li>
-                      {% endfor %}
-                      </ul>
-                  {% endif %}
-                </p>
+                <h2>Heading 2</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+            <div class="col-md-4">
+                <h2>Heading 3</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
             </div>
             <!-- /.col-md-4 -->
         </div>
@@ -144,7 +132,7 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12">
-                    <p>Copyleft -- ale3andro.gr 05/2017 -- No rights reserved</p>
+                    <p>Copyright &copy; Your Website 2014</p>
                 </div>
             </div>
         </footer>
