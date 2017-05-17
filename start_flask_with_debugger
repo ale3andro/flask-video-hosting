@@ -1,0 +1,4 @@
+export FLASK_APP=video_hosting.py
+export FLASK_DEBUG=1
+python -m flask run
+
