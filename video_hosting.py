@@ -24,7 +24,7 @@ try:
     for row in cur.fetchall():
         video_keywords.append(row)
 
-    cur.execute('select * from categories')
+    cur.execute('select * from categories order by description')
     for row in cur.fetchall():
         counter=0
         for item in videos:
@@ -59,13 +59,42 @@ except sqlite3.Error, e:
 def index():
     return render_template('homepage.html', t_categories=categories, t_keywords=keywords, t_taxeis=taxeis)
 
+@app.route('/category/<name>')
+def category(name):
+    category_name=''
+    for item in categories:
+        if int(name)==item[0]:
+            category_name=item[1]
+    if category_name=='':
+        print 'error' #TODO Create an error template
+
+    category_videos = []
+    for item in videos:
+        if item[2]==int(name):
+            category_videos.append(item)
+
+    return render_template('list-videos.html', category=category_name, videos=category_videos, t_categories=categories, t_keywords=keywords, t_taxeis=taxeis)
+
+
 @app.route('/taxi/<name>')
 def taxi(name):
-    return render_template('taxi.html', taxi=name)
+    taxi_name=''
+    for item in taxeis:
+        if item[0]==int(name):
+            taxi_name=item[1]
+    if taxi_name=='':
+        print 'error' #TODO Create an error template
+
+    taxi_videos = []
+    for item in videos:
+        if item[1]==int(name):
+            taxi_videos.append(item)
+
+    return render_template('list-videos.html', taxi=taxi_name, videos=taxi_videos, t_categories=categories, t_keywords=keywords)
 
 @app.route('/video/<id>')
 def video(id):
-    return render_template('video.html', video=getVideoFromId(id))
+    return render_template('video.html', video=getVideoFromId(id), t_categories=categories, t_taxeis=taxeis)
 
 def getVideoFromId(id):
     global videos
