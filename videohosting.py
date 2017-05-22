@@ -59,6 +59,23 @@ except sqlite3.Error, e:
 def index():
     return render_template('homepage.html', t_categories=categories, t_keywords=keywords, t_taxeis=taxeis)
 
+@app.route('/keyword/<keyword_id>')
+def keyword(keyword_id):
+    keyword_name=''
+    for item in keywords:
+        if item[0]==int(keyword_id):
+            keyword_name=item[1]
+    if keyword_name=='':
+        print 'error' #TODO Create an error template
+    keyword_videos = []
+    for item in video_keywords:
+        if item[1]==int(keyword_id):
+            for video in videos:
+                if video[0]==item[2]:
+                    keyword_videos.append(video)
+
+    return render_template('list-videos.html', keyword=keyword_name, videos=keyword_videos, t_categories=categories, t_keywords=keywords, t_video_keywords=video_keywords, t_taxeis=taxeis)
+
 @app.route('/category/<name>')
 def category(name):
     category_name=''
@@ -73,7 +90,7 @@ def category(name):
         if item[2]==int(name):
             category_videos.append(item)
 
-    return render_template('list-videos.html', category=category_name, videos=category_videos, t_categories=categories, t_keywords=keywords, t_taxeis=taxeis)
+    return render_template('list-videos.html', category=category_name, videos=category_videos, t_categories=categories, t_keywords=keywords, t_video_keywords=video_keywords, t_taxeis=taxeis)
 
 
 @app.route('/taxi/<name>')

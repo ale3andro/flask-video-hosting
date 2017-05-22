@@ -76,6 +76,8 @@
                     Βίντεο για την τάξη: {{ taxi }}
                   {% elif (category) %}
                     Βίντεο κατηγορίας: {{ category }}
+                  {% else %}
+                    Λέξη κλειδί: {{ keyword }}
                   {% endif %}
               </div>
           </div>
@@ -94,11 +96,12 @@
                           <th>Όνομα</th>
                           <th>Περιγραφή</th>
                           {% if (taxi) %}
-                            <th>Κατηγορία</th>
+                            <th>Κατηγορία</th><th>Λέξεις κλειδιά</th>
+                          {% elif (category) %}
+                            <th>Τάξη</th><th>Λέξεις κλειδιά</th>
                           {% else %}
-                            <th>Τάξη</th>
+                            <th>Κατηγορία</th><th>Τάξη</th>
                           {% endif %}
-                          <th>Λέξεις κλειδιά</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -113,20 +116,49 @@
                                         {{ category[1] }}
                                       {% endif %}
                                     {% endfor %}
-                                  </a></td>
-                          {% else %}
-                          <td><a href="/taxi/{{ video[1] }}">
-                                {% for taxi in t_taxeis %}
-                                  {% if (video[1]==taxi[0]) %}
-                                    {{ taxi[1] }}
-                                  {% endif %}
-                                {% endfor %}
-                              </a></td>
-                          {% endif %}
-                          <td>
-                              todo
+                                  </a>
+                              </td>
+                              <td>todo
+                              </td>
+                          {% elif (category) %}
+                              <td><a href="/taxi/{{ video[1] }}">
+                                    {% for taxi in t_taxeis %}
+                                      {% if (video[1]==taxi[0]) %}
+                                        {{ taxi[1] }}
+                                      {% endif %}
+                                    {% endfor %}
+                                  </a>
+                              </td>
+                              <td>
+                                  {% for item in t_video_keywords %}
+                                    {% if item[2]==video[0] %}
+                                      {% for keyword in t_keywords %}
+                                        {% if keyword[0]== item[1] %}
+                                          {{ keyword[1] }},
+                                        {% endif %}
+                                      {% endfor %}
+                                    {% endif %}
+                                  {% endfor %}
 
-                          </td>
+                              </td>
+                          {% else %}
+                              <td><a href="/category/{{ video[2] }}">
+                                    {% for category in t_categories %}
+                                      {% if (video[2]==category[0]) %}
+                                        {{ category[1] }}
+                                      {% endif %}
+                                    {% endfor %}
+                                  </a>
+                              </td>
+                              <td><a href="/taxi/{{ video[1] }}">
+                                    {% for taxi in t_taxeis %}
+                                      {% if (video[1]==taxi[0]) %}
+                                        {{ taxi[1] }}
+                                      {% endif %}
+                                    {% endfor %}
+                                  </a>
+                              </td>
+                          {% endif %}
                       </tr>
                       {% endfor %}
                   </tbody>
@@ -134,8 +166,10 @@
                 {% else %}
                   {% if (taxi) %}
                       <div class="well text-center">Δεν βρέθηκαν videos για την τάξη αυτή</div>
-                  {% else %}
+                  {% elif (category) %}
                       <div class="well text-center">Δεν βρέθηκαν videos για την κατηγορία αυτή</div>
+                  {% else %}
+                      <div class="well text-center">Δεν βρέθηκαν videos με αυτή τη λέξη κλειδί</div>
                   {% endif %}
                 {% endif %}
             </div>
