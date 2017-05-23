@@ -121,9 +121,13 @@ def taxi(name):
 
     return render_template('list-videos.html', taxi=taxi_name, videos=taxi_videos, video_keywords=taxi_videos_keywords, t_categories=categories, t_keywords=keywords)
 
+@app.route('/edit/<id>')
+def edit(id):
+    return render_template('edit.html', video=getVideoFromId(id), keywords=getKeywordsFromVideoId(id), t_categories=categories, t_taxeis=taxeis, t_keywords=keywords)
+
 @app.route('/video/<id>')
 def video(id):
-    return render_template('video.html', video=getVideoFromId(id), t_categories=categories, t_taxeis=taxeis)
+    return render_template('video.html', video=getVideoFromId(id), keywords=getKeywordsFromVideoId(id), t_categories=categories, t_taxeis=taxeis)
 
 def getVideoFromId(id):
     global videos
@@ -131,3 +135,13 @@ def getVideoFromId(id):
         if item[0]==int(id):
             return item
     return -1
+
+def getKeywordsFromVideoId(id):
+    global video_keywords, keywords
+    vid_keywords = []
+    for item in video_keywords:
+        if (int(id)==item[2]):
+            for keyword in keywords:
+                if (item[1]==keyword[0]):
+                    vid_keywords.append([keyword[0], keyword[1]])
+    return vid_keywords
