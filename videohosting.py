@@ -86,11 +86,17 @@ def category(name):
         print 'error' #TODO Create an error template
 
     category_videos = []
+    category_videos_keywords = []
     for item in videos:
         if item[2]==int(name):
             category_videos.append(item)
+            for key_video in video_keywords:
+                if item[0]==key_video[2]:
+                    for keyword in keywords:
+                        if (keyword[0]==key_video[1]):
+                            category_videos_keywords.append([item[0], keyword[0], keyword[1]])  #video_id, keyword_id, keyword_name
 
-    return render_template('list-videos.html', category=category_name, videos=category_videos, t_categories=categories, t_keywords=keywords, t_video_keywords=video_keywords, t_taxeis=taxeis)
+    return render_template('list-videos.html', category=category_name, videos=category_videos, video_keywords=category_videos_keywords, t_categories=categories, t_keywords=keywords, t_video_keywords=video_keywords, t_taxeis=taxeis)
 
 
 @app.route('/taxi/<name>')
@@ -103,11 +109,17 @@ def taxi(name):
         print 'error' #TODO Create an error template
 
     taxi_videos = []
+    taxi_videos_keywords = []
     for item in videos:
         if item[1]==int(name):
             taxi_videos.append(item)
+            for key_video in video_keywords:
+                if item[0]==key_video[2]:
+                    for keyword in keywords:
+                        if (keyword[0]==key_video[1]):
+                            taxi_videos_keywords.append([item[0], keyword[0], keyword[1]])  #video_id, keyword_id, keyword_name
 
-    return render_template('list-videos.html', taxi=taxi_name, videos=taxi_videos, t_categories=categories, t_keywords=keywords)
+    return render_template('list-videos.html', taxi=taxi_name, videos=taxi_videos, video_keywords=taxi_videos_keywords, t_categories=categories, t_keywords=keywords)
 
 @app.route('/video/<id>')
 def video(id):

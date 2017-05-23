@@ -118,7 +118,14 @@
                                     {% endfor %}
                                   </a>
                               </td>
-                              <td>todo
+                              <td>
+                                {% for item in video_keywords %}
+                                  <ul>
+                                  {% if item[0]==video[0] %}
+                                    <li><a href="/keyword/{{ item[1] }}">{{ item[2] }}</a></li>
+                                  {% endif %}
+                                  </ul>
+                                {% endfor %}
                               </td>
                           {% elif (category) %}
                               <td><a href="/taxi/{{ video[1] }}">
@@ -130,14 +137,12 @@
                                   </a>
                               </td>
                               <td>
-                                  {% for item in t_video_keywords %}
-                                    {% if item[2]==video[0] %}
-                                      {% for keyword in t_keywords %}
-                                        {% if keyword[0]== item[1] %}
-                                          {{ keyword[1] }},
-                                        {% endif %}
-                                      {% endfor %}
+                                  {% for item in video_keywords %}
+                                    <ul>
+                                    {% if item[0]==video[0] %}
+                                      <li><a href="/keyword/{{ item[1] }}">{{ item[2] }}</a></li>
                                     {% endif %}
+                                  </ul>
                                   {% endfor %}
 
                               </td>
