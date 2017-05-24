@@ -99,16 +99,16 @@
         <div class="row">
             <!-- /.col-md-12 -->
             <div class="col-md-12">
-              {% if video!=-1 %}
-
-              <form action="">
+            {% if video!=-1 %}
+              <form action="/commit" method="post">
+                <input name="theid" value="{{ video[0] }}" hidden>
                 <div class="input-group">
                   <span class="input-group-addon" id="perigrafh">Περιγραφή</span>
-                  <input type="text" class="form-control" placeholder="{{ video[6] }}" aria-describedby="perigrafh">
+                  <input name="perigrafh" type="text" class="form-control" placeholder="{{ video[6] }}" aria-describedby="perigrafh">
                 </div>
                 <div class="input-group">
                   <span class="input-group-addon" id="taxi">Τάξη</span>
-                  <select class="form-control" id="taxiSelect">
+                  <select class="form-control" id="taxiSelect" name="taxh">
                   {% for taxi in t_taxeis %}
                     {% if (video[1]==taxi[0]) %}
                       <option selected="selected" value="{{ taxi[0] }}">{{ taxi[1] }}</option>
@@ -120,7 +120,7 @@
                 </div>
                 <div class="input-group">
                   <span class="input-group-addon" id="category">Κατηγορία</span>
-                  <select class="form-control" id="categorySelect">
+                  <select class="form-control" id="categorySelect" name="category">
                   {% for category in t_categories %}
                     {% if (video[2]==category[0]) %}
                       <option selected="selected" value="{{ category[0] }}">{{ category[1] }}</option>
@@ -132,7 +132,7 @@
                 </div>
                 <div class="input-group">
                   <span class="input-group-addon" id="keywords">Λέξεις-Κλειδιά (χωρ. με κόμμα)</span>
-                  <input type="text" class="form-control" placeholder="
+                  <input type="text" class="form-control" name="keywords" placeholder="
                     {% for i in range(0, keywords|count) %}
                       {{ keywords[i][1] }}{% if i!=(keywords|count-1) %}, {% endif %}
                     {% endfor %}

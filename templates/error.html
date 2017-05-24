@@ -72,11 +72,7 @@
       <div class="row">
           <div class="col-lg-12">
               <div class="well text-center">
-                  {% if (video!=-1) %}
-                    Όνομα αρχείου: {{ video[5] }}
-                  {% else %}
-                    <h2><span class="label label-danger">Δεν βρέθηκε video με αυτό το id</span></h2>
-                  {% endif %}
+
               </div>
           </div>
           <!-- /.col-lg-12 -->
@@ -85,59 +81,22 @@
         <!-- Heading Row -->
         <div class="row">
             <div class="col-md-12" align="center">
-                {% if video!=-1 %}
-                        <video width="{{ video[3] }}" height="{{ video[4] }}" controls>
-                            <source src="{{ url_for('static', filename='videos/' + video[5]) }}" type='video/ogg; codecs="theora, vorbis"'>
-                        </video>
-                        <br>
-                {% else %}
-                    <img class="img-responsive img-rounded" src="http://placehold.it/900x350" alt="">
-                {% endif %}
+
             </div>
         </div>
         <hr>
         <div class="row">
             <!-- /.col-md-12 -->
             <div class="col-md-12">
-              {% if video!=-1 %}
-              <table class="table table-hover">
-                <tbody>
-                  <tr>
-                    <td>Περιγραφή:</td>
-                    <td>{{ video[6] }}</td>
-                  </tr>
-                  <tr>
-                    <td>Τάξη:</td>
-                    <td>
-                        {% for taxi in t_taxeis %}
-                          {% if (video[1]==taxi[0]) %}
-                            <a href="/taxi/{{ taxi[0] }}">{{ taxi[1] }}</a>
-                          {% endif %}
-                        {% endfor %}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Κατηγορία:</td>
-                    <td>
-                        {% for category in t_categories %}
-                          {% if (video[2]==category[0]) %}
-                            <a href="/category/{{ category[0] }}">{{ category[1] }}</a>
-                          {% endif %}
-                        {% endfor %}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Λέξεις κλειδιά:</td>
-                    <td>
-                        {% for item in keywords %}
-                          <a href="/keyword/{{ item[0] }}"><span class="label label-primary">{{ item[1] }}</span></a>
-                        {% endfor %}
-                    </td>
-                  </tr>
-                </table>
-              {% else %}
-                <span class="label label-danger">Μη διαθέσιμο video</span>
-              {% endif %}
+            {% if (perigrafh) %}
+              {{ id }}<br>
+              {{ perigrafh }}<br>
+              {{ taxh }}<br>
+              {{ category }}<br>
+              {{ keywords }}<br>
+              <a href="/video/{{id}}">Προβολή στοιχείων video</a>
+            {% endif %}
+
             </div>
         </div>
         <!-- /.row -->
@@ -148,7 +107,7 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12">
-                    <p>Copyleft -- ale3andro.gr 05/2017 -- No rights reserv<a href="/edit/{{video[0]}}">ed</a></p>
+                    <p>Copyleft -- ale3andro.gr 05/2017 -- No rights reserved</p>
                 </div>
             </div>
         </footer>

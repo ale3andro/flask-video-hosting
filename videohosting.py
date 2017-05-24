@@ -1,62 +1,71 @@
 # coding=utf-8
-import sqlite3
+import sqlite3, sys
 
 from flask import Flask
 from flask import render_template, request, redirect
 app = Flask(__name__)
 
-global videos, categories, keywords, taxeis, video_keywords
-con = None
+global videos, categories, keywords, taxeis, video_keywords, con, cur
+try:
+    con = sqlite3.connect('sxoleio.pw.videos.db')
+    cur = con.cursor()
+except sqlite3.Error, e:
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+
 videos = []
 categories = []
 keywords = []
 taxeis = []
 video_keywords = []
-try:
-    con = sqlite3.connect('sxoleio.pw.videos.db')
-    cur = con.cursor()
 
-    cur.execute('select * from videos')
-    for row in cur.fetchall():
-        videos.append(row)
+def load_globals():
+    global videos, categories, keywords, taxeis, video_keywords, con, cur
+    videos = []
+    categories = []
+    keywords = []
+    taxeis = []
+    video_keywords = []
+    try:
+        print 'loading globals'
+        cur.execute('select * from videos')
+        for row in cur.fetchall():
+            videos.append(row)
 
-    cur.execute('select * from video_keywords')
-    for row in cur.fetchall():
-        video_keywords.append(row)
+        cur.execute('select * from video_keywords')
+        for row in cur.fetchall():
+            video_keywords.append(row)
 
-    cur.execute('select * from categories order by description')
-    for row in cur.fetchall():
-        counter=0
-        for item in videos:
-            if item[2]==row[0]:
-                counter+=1
-        categories.append([row[0], row[1], counter])
+        cur.execute('select * from categories order by description')
+        for row in cur.fetchall():
+            counter=0
+            for item in videos:
+                if item[2]==row[0]:
+                    counter+=1
+            categories.append([row[0], row[1], counter])
 
-    cur.execute('select * from keywords')
-    for row in cur.fetchall():
-        counter=0
-        for item in video_keywords:
-            if item[1]==row[0]:
-                counter+=1
-        keywords.append([row[0], row[1], counter])
+        cur.execute('select * from keywords')
+        for row in cur.fetchall():
+            counter=0
+            for item in video_keywords:
+                if item[1]==row[0]:
+                    counter+=1
+            keywords.append([row[0], row[1], counter])
 
-    cur.execute('select * from taxeis')
-    for row in cur.fetchall():
-        counter=0
-        for item in videos:
-            if row[0]==item[1]:
-                counter+=1
-        taxeis.append([row[0], row[1], counter])
-
-
-
-except sqlite3.Error, e:
-    print "Error %s:" % e.args[0]
-    sys.exit(1)
-
+        cur.execute('select * from taxeis')
+        for row in cur.fetchall():
+            counter=0
+            for item in videos:
+                if row[0]==item[1]:
+                    counter+=1
+            taxeis.append([row[0], row[1], counter])
+    except sqlite3.Error, e:
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
 
 @app.route('/')
 def index():
+    load_globals()
     return render_template('homepage.html', t_categories=categories, t_keywords=keywords, t_taxeis=taxeis)
 
 @app.route('/keyword/<keyword_id>')
@@ -124,6 +133,34 @@ def taxi(name):
 @app.route('/edit/<id>')
 def edit(id):
     return render_template('edit.html', video=getVideoFromId(id), keywords=getKeywordsFromVideoId(id), t_categories=categories, t_taxeis=taxeis, t_keywords=keywords)
+
+@app.route('/commit', methods=["POST"])
+def commit_edit_changes():
+    f_id = request.form.get('theid')
+    f_perigrafh = request.form.get('perigrafh')
+    f_taxh = request.form.get('taxh')
+    f_category = request.form.get('category')
+    f_keywords = request.form.get('keywords')
+
+    cur.execute('select * from videos where `id`=%d' % int(f_id))
+    for row in cur.fetchall():
+        s_taxh = row[1]
+        s_category = row[2]
+
+    if (f_perigrafh!=""):
+        query = "update videos set notes='%s' where id=%d" % (f_perigrafh, int(f_id))
+        print query
+        cur.execute(query)
+        con.commit()
+    if (f_taxh!=s_taxh):
+        query = "update videos set `taxi_id`=%d where `id`=%d" % (int(f_taxh), int(f_id))
+        #cur.execute(query)
+    if (f_category!=s_category):
+        query = "update videos set `category_id`=%d where `id`=%d" % (int(f_category), int(f_id))
+        #cur.execute(query)
+
+    load_globals()
+    return render_template('error.html', id=f_id, perigrafh=f_perigrafh, taxh=f_taxh, category=f_category, keywords=f_keywords)
 
 @app.route('/video/<id>')
 def video(id):
