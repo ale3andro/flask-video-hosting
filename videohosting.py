@@ -1,5 +1,5 @@
 # coding=utf-8
-import sqlite3, sys
+import sqlite3, sys, string
 
 from flask import Flask
 from flask import render_template, request, redirect
@@ -44,7 +44,7 @@ def load_globals():
                     counter+=1
             categories.append([row[0], row[1], counter])
 
-        cur.execute('select * from keywords')
+        cur.execute('select * from keywords order by description')
         for row in cur.fetchall():
             counter=0
             for item in video_keywords:
@@ -149,16 +149,60 @@ def commit_edit_changes():
 
     if (f_perigrafh!=""):
         query = "update videos set notes='%s' where id=%d" % (f_perigrafh, int(f_id))
-        print query
         cur.execute(query)
-        con.commit()
-    if (f_taxh!=s_taxh):
-        query = "update videos set `taxi_id`=%d where `id`=%d" % (int(f_taxh), int(f_id))
-        #cur.execute(query)
-    if (f_category!=s_category):
-        query = "update videos set `category_id`=%d where `id`=%d" % (int(f_category), int(f_id))
-        #cur.execute(query)
 
+    if (f_taxh!=s_taxh):
+        query = "update videos set taxi_id=%d where id=%d" % (int(f_taxh), int(f_id))
+        cur.execute(query)
+
+    if (f_category!=s_category):
+        query = "update videos set category_id=%d where id=%d" % (int(f_category), int(f_id))
+        cur.execute(query)
+
+    #keywords
+    cur_keywords = getKeywordsFromVideoId(int(f_id))
+    f_keywords_lower = f_keywords.lower()
+    new_keywords = f_keywords_lower.split(',')
+    for i in range(0, len(new_keywords)):
+        new_keywords[i]=new_keywords[i].strip()
+
+
+    for new_k in new_keywords:
+        found_in_video=False
+        # Αρχικά η αναζήτηση γίνεται μέσα στα ήδη υπάρχοντα keywords του video - αν φυσικά υπάρχουν
+        for old_k in cur_keywords:
+            if (new_k==old_k[1]):
+                found_in_video=True # To keyword υπάρχει ήδη - απλά αλλάζει το flag
+
+        # Αν όμως το keyword δεν υπάρχει μέσα στα ήδη υπάρχοντα του video, πρέπει πρώτα να αναζητήσω αν υπάρχει τέτοιo keyword ήδη ώστε να μην το ξαναδημιουργήσω
+        if not found_in_video:
+            found_in_db=False
+            for keyword in keywords: # Αναζήτηση μέσα σε  όλα τα keywords
+                if (keyword[1]==new_k):
+                    found_in_db=True # Υπάρχει ήδη στη ΒΔ μένει μόνο να δημιουργηθεί η συσχέτιση
+                    query = "insert into video_keywords values (null, %d, %d)" % (int(keyword[0]), int(f_id))
+                    cur.execute(query)
+            if not found_in_db: # Εισαγωγή νέου keyword και μετά της συσχέτισης
+                query1 = "insert into keywords values(null, '%s')" % new_k
+                cur.execute(query1)
+                new_keyword_id = cur.lastrowid
+                query2 = "insert into video_keywords values (null, %d, %d)" % (int(new_keyword_id), int(f_id))
+                cur.execute(query2)
+    # Τέλος ένας ακόμη έλεγχος - Αν κάποιο από τα αρχικά keywords δεν υπάρχει στα νέα, πρέπει να διαγραφεί.
+    for item in cur_keywords:
+        if item[1] not in new_keywords:
+            query = "delete from video_keywords where keyword_id=%d and video_id=%d" % (int(item[0]), int(f_id))
+            cur.execute(query)
+    # Διαγραφή ορφανών keywords
+    con.commit()
+    cur.execute("select * from keywords")
+    for row in cur.fetchall():
+        query = "select * from video_keywords where keyword_id=%d" % int(row[0])
+        cur.execute(query)
+        if (len(cur.fetchall())==0):
+            cur.execute("delete from keywords where id=%d" % int(row[0]))
+
+    con.commit()
     load_globals()
     return render_template('error.html', id=f_id, perigrafh=f_perigrafh, taxh=f_taxh, category=f_category, keywords=f_keywords)
 
