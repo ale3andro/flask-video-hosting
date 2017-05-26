@@ -73,7 +73,7 @@
           <div class="col-lg-12">
               <div class="well text-center">
                   {% if (video!=-1) %}
-                    Όνομα αρχείου: {{ video[5] }}
+                    Όνομα αρχείου: {{ video.filename }}
                   {% else %}
                     <h2><span class="label label-danger">Δεν βρέθηκε video με αυτό το id</span></h2>
                   {% endif %}
@@ -86,8 +86,8 @@
         <div class="row">
             <div class="col-md-12" align="center">
                 {% if video!=-1 %}
-                        <video width="{{ video[3] }}" height="{{ video[4] }}" controls>
-                            <source src="{{ url_for('static', filename='videos/' + video[5]) }}" type='video/ogg; codecs="theora, vorbis"'>
+                        <video width="{{ video.width }}" height="{{ video.height }}" controls>
+                            <source src="{{ url_for('static', filename='videos/' + video.filename) }}" type='video/ogg; codecs="theora, vorbis"'>
                         </video>
                         <br>
                 {% else %}
@@ -104,14 +104,14 @@
                 <tbody>
                   <tr>
                     <td>Περιγραφή:</td>
-                    <td>{{ video[6] }}</td>
+                    <td>{{ video.notes }}</td>
                   </tr>
                   <tr>
                     <td>Τάξη:</td>
                     <td>
                         {% for taxi in t_taxeis %}
-                          {% if (video[1]==taxi[0]) %}
-                            <a href="/taxi/{{ taxi[0] }}">{{ taxi[1] }}</a>
+                          {% if video.taxi_id==taxi.id %}
+                            <a href="/taxi/{{ taxi.id }}">{{ taxi.description }}</a>
                           {% endif %}
                         {% endfor %}
                     </td>
@@ -120,8 +120,8 @@
                     <td>Κατηγορία:</td>
                     <td>
                         {% for category in t_categories %}
-                          {% if (video[2]==category[0]) %}
-                            <a href="/category/{{ category[0] }}">{{ category[1] }}</a>
+                          {% if (video.category_id==category.id) %}
+                            <a href="/category/{{ category.id }}">{{ category.description }}</a>
                           {% endif %}
                         {% endfor %}
                     </td>
@@ -129,8 +129,8 @@
                   <tr>
                     <td>Λέξεις κλειδιά:</td>
                     <td>
-                        {% for item in keywords %}
-                          <a href="/keyword/{{ item[0] }}"><span class="label label-primary">{{ item[1] }}</span></a>
+                        {% for keyword in keywords %}
+                          <a href="/keyword/{{ keyword[0] }}"><span class="label label-primary">{{ keyword[1] }}</span></a>
                         {% endfor %}
                     </td>
                   </tr>

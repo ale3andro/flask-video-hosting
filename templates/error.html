@@ -99,6 +99,14 @@
             {% if id %}
               <a href="/video/{{id}}">Προβολή στοιχείων video</a>
             {% endif %}
+
+            {% if theVids %}
+                {% for vid in theVids %}
+                    {{ vid.filename }}
+                    {{ vid.notes }}
+                {% endfor %}
+            {% endif %}
+
             </div>
         </div>
         <!-- /.row -->

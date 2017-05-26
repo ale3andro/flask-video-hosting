@@ -1,134 +1,106 @@
 # coding=utf-8
-import sqlite3, sys, string
+import sqlite3, sys, string, os
 
 from flask import Flask
 from flask import render_template, request, redirect
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'sxoleio.pw.videos.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = "asu9japfj09ruj230jx0q3QR#@#R Kk3"
 
-global videos, categories, keywords, taxeis, video_keywords, con, cur
-try:
-    con = sqlite3.connect('sxoleio.pw.videos.db')
-    cur = con.cursor()
-except sqlite3.Error, e:
-    print "Error %s:" % e.args[0]
-    sys.exit(1)
+db = SQLAlchemy(app)
 
-videos = []
-categories = []
-keywords = []
-taxeis = []
-video_keywords = []
+class videos(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    taxi_id = db.Column('taxi_id', db.Integer)
+    category_id = db.Column('category_id', db.Integer)
+    width = db.Column('width', db.Integer)
+    height = db.Column('height', db.Integer)
+    filename = db.Column('filename', db.String(100))
+    notes = db.Column('notes', db.String(300))
 
-def load_globals():
-    global videos, categories, keywords, taxeis, video_keywords, con, cur
-    videos = []
-    categories = []
-    keywords = []
-    taxeis = []
-    video_keywords = []
-    try:
-        print 'loading globals'
-        cur.execute('select * from videos')
-        for row in cur.fetchall():
-            videos.append(row)
+class categories(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    description = db.Column('description', db.String(50))
 
-        cur.execute('select * from video_keywords')
-        for row in cur.fetchall():
-            video_keywords.append(row)
+class keywords(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    description = db.Column('description', db.String(50))
 
-        cur.execute('select * from categories order by description')
-        for row in cur.fetchall():
-            counter=0
-            for item in videos:
-                if item[2]==row[0]:
-                    counter+=1
-            categories.append([row[0], row[1], counter])
+class taxeis(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    description = db.Column('description', db.String(5))
 
-        cur.execute('select * from keywords order by description')
-        for row in cur.fetchall():
-            counter=0
-            for item in video_keywords:
-                if item[1]==row[0]:
-                    counter+=1
-            keywords.append([row[0], row[1], counter])
+class video_keywords(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    keyword_id = db.Column('keyword_id', db.Integer)
+    video_id = db.Column('video_id', db.Integer)
 
-        cur.execute('select * from taxeis')
-        for row in cur.fetchall():
-            counter=0
-            for item in videos:
-                if row[0]==item[1]:
-                    counter+=1
-            taxeis.append([row[0], row[1], counter])
-    except sqlite3.Error, e:
-        print "Error %s:" % e.args[0]
-        sys.exit(1)
 
 @app.route('/')
 def index():
-    load_globals()
-    return render_template('homepage.html', t_categories=categories, t_keywords=keywords, t_taxeis=taxeis)
+    t_categories = categories.query.all()
+    t_counter_categories = []
+    for item in t_categories:
+        vids = videos.query.filter_by(category_id=item.id)
+        t_counter_categories.append(vids.count())
+
+    t_taxeis = taxeis.query.all()
+    t_counter_taxeis = []
+    for item in t_taxeis:
+        vids = videos.query.filter_by(taxi_id=item.id)
+        t_counter_taxeis.append(vids.count())
+
+    t_keywords = keywords.query.all()
+    t_counter_keywords = []
+    for item in t_keywords:
+        vids = video_keywords.query.filter_by(keyword_id=item.id)
+        t_counter_keywords.append(vids.count())
+
+    return render_template('homepage.html', t_categories=t_categories, t_counter_categories=t_counter_categories, t_keywords=t_keywords, t_counter_keywords=t_counter_keywords, t_taxeis=t_taxeis, t_counter_taxeis=t_counter_taxeis)
 
 @app.route('/keyword/<keyword_id>')
 def keyword(keyword_id):
-    keyword_name=''
-    for item in keywords:
-        if item[0]==int(keyword_id):
-            keyword_name=item[1]
-    if keyword_name=='':
-        print 'error' #TODO Create an error template
-    keyword_videos = []
-    for item in video_keywords:
-        if item[1]==int(keyword_id):
-            for video in videos:
-                if video[0]==item[2]:
-                    keyword_videos.append(video)
+    keyword=keywords.query.get(int(keyword_id))
+    tmp_vidkeys = video_keywords.query.filter_by(keyword_id=int(keyword_id))
+    vidIds = []
+    for tmp_vidkey in tmp_vidkeys:
+        vidIds.append(tmp_vidkey.video_id)
+    keyword_videos = videos.query.filter(videos.id.in_(vidIds))
 
-    return render_template('list-videos.html', keyword=keyword_name, videos=keyword_videos, t_categories=categories, t_keywords=keywords, t_video_keywords=video_keywords, t_taxeis=taxeis)
+    return render_template('list-videos.html', keyword=keyword, videos=keyword_videos, t_categories=categories.query.all(), t_taxeis=taxeis.query.all())
 
-@app.route('/category/<name>')
-def category(name):
-    category_name=''
-    for item in categories:
-        if int(name)==item[0]:
-            category_name=item[1]
-    if category_name=='':
-        print 'error' #TODO Create an error template
+@app.route('/category/<category_id>')
+def category(category_id):
+    category = categories.query.get(int(category_id))
+    category_videos = videos.query.filter_by(category_id=int(category_id))
 
-    category_videos = []
     category_videos_keywords = []
-    for item in videos:
-        if item[2]==int(name):
-            category_videos.append(item)
-            for key_video in video_keywords:
-                if item[0]==key_video[2]:
-                    for keyword in keywords:
-                        if (keyword[0]==key_video[1]):
-                            category_videos_keywords.append([item[0], keyword[0], keyword[1]])  #video_id, keyword_id, keyword_name
+    for item in category_videos:
+        tmp_vidkeys = video_keywords.query.filter_by(video_id=item.id)
+        for tmp_vidkey in tmp_vidkeys:
+            keyword = keywords.query.get(tmp_vidkey.keyword_id)
+            category_videos_keywords.append([item.id, keyword.id, keyword.description])
 
-    return render_template('list-videos.html', category=category_name, videos=category_videos, video_keywords=category_videos_keywords, t_categories=categories, t_keywords=keywords, t_video_keywords=video_keywords, t_taxeis=taxeis)
+    return render_template('list-videos.html', category=category, videos=category_videos, video_keywords=category_videos_keywords, t_taxeis=taxeis.query.all())
 
 
-@app.route('/taxi/<name>')
-def taxi(name):
-    taxi_name=''
-    for item in taxeis:
-        if item[0]==int(name):
-            taxi_name=item[1]
-    if taxi_name=='':
-        print 'error' #TODO Create an error template
+@app.route('/taxi/<taxi_id>')
+def taxi(taxi_id):
+    taxi = taxeis.query.get(int(taxi_id))
+    taxi_videos = videos.query.filter_by(taxi_id=int(taxi_id))
 
-    taxi_videos = []
     taxi_videos_keywords = []
-    for item in videos:
-        if item[1]==int(name):
-            taxi_videos.append(item)
-            for key_video in video_keywords:
-                if item[0]==key_video[2]:
-                    for keyword in keywords:
-                        if (keyword[0]==key_video[1]):
-                            taxi_videos_keywords.append([item[0], keyword[0], keyword[1]])  #video_id, keyword_id, keyword_name
+    for item in taxi_videos:
+        tmp_vidkeys = video_keywords.query.filter_by(video_id=item.id)
+        for tmp_vidkey in tmp_vidkeys:
+            keyword = keywords.query.get(tmp_vidkey.keyword_id)
+            taxi_videos_keywords.append([item.id, keyword.id, keyword.description])
 
-    return render_template('list-videos.html', taxi=taxi_name, videos=taxi_videos, video_keywords=taxi_videos_keywords, t_categories=categories, t_keywords=keywords)
+    return render_template('list-videos.html', taxi=taxi, videos=taxi_videos, video_keywords=taxi_videos_keywords, t_categories=categories.query.all())
 
 @app.route('/edit/<id>')
 def edit(id):
@@ -208,21 +180,11 @@ def commit_edit_changes():
 
 @app.route('/video/<id>')
 def video(id):
-    return render_template('video.html', video=getVideoFromId(id), keywords=getKeywordsFromVideoId(id), t_categories=categories, t_taxeis=taxeis)
+    video=videos.query.get(int(id))
+    f_keywords=[]
+    tmp_keywords=video_keywords.query.filter_by(video_id=int(id))
+    for item in tmp_keywords:
+        tmp_key=keywords.query.get(item.keyword_id)
+        f_keywords.append([tmp_key.id, tmp_key.description])
 
-def getVideoFromId(id):
-    global videos
-    for item in videos:
-        if item[0]==int(id):
-            return item
-    return -1
-
-def getKeywordsFromVideoId(id):
-    global video_keywords, keywords
-    vid_keywords = []
-    for item in video_keywords:
-        if (int(id)==item[2]):
-            for keyword in keywords:
-                if (item[1]==keyword[0]):
-                    vid_keywords.append([keyword[0], keyword[1]])
-    return vid_keywords
+    return render_template('video.html', video=video, keywords=f_keywords, t_categories=categories.query.all(), t_taxeis=taxeis.query.all())

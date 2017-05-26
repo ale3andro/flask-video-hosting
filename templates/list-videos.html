@@ -73,11 +73,11 @@
           <div class="col-lg-12">
               <div class="well text-center">
                   {% if (taxi) %}
-                    Βίντεο για την τάξη: {{ taxi }}
+                    Βίντεο για την τάξη: {{ taxi.description }}
                   {% elif (category) %}
-                    Βίντεο κατηγορίας: {{ category }}
+                    Βίντεο κατηγορίας: {{ category.description }}
                   {% else %}
-                    Λέξη κλειδί: {{ keyword }}
+                    Λέξη κλειδί: {{ keyword.description }}
                   {% endif %}
               </div>
           </div>
@@ -107,52 +107,52 @@
                   <tbody>
                       {% for video in videos %}
                       <tr>
-                          <td><a href="/video/{{ video[0] }}">{{ video[5] }}</a></td>
-                          <td>{{ video[6] }}</td>
+                          <td><a href="/video/{{ video.id }}">{{ video.filename }}</a></td>
+                          <td>{{ video.notes }}</td>
                           {% if (taxi) %}
-                              <td><a href="/category/{{ video[2] }}">
+                              <td><a href="/category/{{ video.category_id }}">
                                     {% for category in t_categories %}
-                                      {% if (video[2]==category[0]) %}
-                                        {{ category[1] }}
+                                      {% if (video.category_id==category.id) %}
+                                        {{ category.description }}
                                       {% endif %}
                                     {% endfor %}
                                   </a>
                               </td>
                               <td>
                                 {% for item in video_keywords %}
-                                  {% if item[0]==video[0] %}
+                                  {% if item[0]==video.id %}
                                     <a href="/keyword/{{ item[1] }}"><span class="label label-primary">{{ item[2] }}</span></a><br>
                                   {% endif %}
                                 {% endfor %}
                           {% elif (category) %}
-                              <td><a href="/taxi/{{ video[1] }}">
+                              <td><a href="/taxi/{{ video.taxi_id }}">
                                     {% for taxi in t_taxeis %}
-                                      {% if (video[1]==taxi[0]) %}
-                                        {{ taxi[1] }}
+                                      {% if (video.taxi_id==taxi.id) %}
+                                        {{ taxi.description }}
                                       {% endif %}
                                     {% endfor %}
                                   </a>
                               </td>
                               <td>
                                   {% for item in video_keywords %}
-                                    {% if item[0]==video[0] %}
+                                    {% if item[0]==video.id %}
                                       <a href="/keyword/{{ item[1] }}"><span class="label label-primary">{{ item[2] }}</span></a><br>
                                     {% endif %}
                                   {% endfor %}
                               </td>
                           {% else %}
-                              <td><a href="/category/{{ video[2] }}">
+                              <td><a href="/category/{{ video.category_id }}">
                                     {% for category in t_categories %}
-                                      {% if (video[2]==category[0]) %}
-                                        {{ category[1] }}
+                                      {% if (video.category_id==category.id) %}
+                                        {{ category.description }}
                                       {% endif %}
                                     {% endfor %}
                                   </a>
                               </td>
-                              <td><a href="/taxi/{{ video[1] }}">
+                              <td><a href="/taxi/{{ video.taxi_id }}">
                                     {% for taxi in t_taxeis %}
-                                      {% if (video[1]==taxi[0]) %}
-                                        {{ taxi[1] }}
+                                      {% if (video.taxi_id==taxi.id) %}
+                                        {{ taxi.description }}
                                       {% endif %}
                                     {% endfor %}
                                   </a>
