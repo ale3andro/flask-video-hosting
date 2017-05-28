@@ -73,7 +73,7 @@
           <div class="col-lg-12">
               <div class="well text-center">
                   {% if (video!=-1) %}
-                    Διόρθωση στοιχείων του: {{ video[5] }}
+                    Διόρθωση στοιχείων του: {{ video.filename }}
                   {% else %}
                     <h2><span class="label label-danger">Δεν βρέθηκε video με αυτό το id</span></h2>
                   {% endif %}
@@ -86,8 +86,8 @@
         <div class="row">
             <div class="col-md-12" align="center">
                 {% if video!=-1 %}
-                        <video width="{{ video[3] }}" height="{{ video[4] }}" controls>
-                            <source src="{{ url_for('static', filename='videos/' + video[5]) }}" type='video/ogg; codecs="theora, vorbis"'>
+                        <video width="{{ video.width }}" height="{{ video,height }}" controls>
+                            <source src="{{ url_for('static', filename='videos/' + video.filename) }}" type='video/ogg; codecs="theora, vorbis"'>
                         </video>
                         <br>
                 {% else %}
@@ -101,19 +101,19 @@
             <div class="col-md-12">
             {% if video!=-1 %}
               <form action="/commit" method="post">
-                <input name="theid" value="{{ video[0] }}" hidden>
+                <input name="theid" value="{{ video.id }}" hidden>
                 <div class="input-group">
                   <span class="input-group-addon" id="perigrafh">Περιγραφή</span>
-                  <input name="perigrafh" type="text" class="form-control" placeholder="{{ video[6] }}" aria-describedby="perigrafh">
+                  <input name="perigrafh" type="text" class="form-control" placeholder="{{ video.notes }}" aria-describedby="perigrafh">
                 </div>
                 <div class="input-group">
                   <span class="input-group-addon" id="taxi">Τάξη</span>
                   <select class="form-control" id="taxiSelect" name="taxh">
                   {% for taxi in t_taxeis %}
-                    {% if (video[1]==taxi[0]) %}
-                      <option selected="selected" value="{{ taxi[0] }}">{{ taxi[1] }}</option>
+                    {% if (video.taxi_id==taxi.id) %}
+                      <option selected="selected" value="{{ taxi.id }}">{{ taxi.description }}</option>
                     {% else %}
-                      <option value="{{ taxi[0] }}">{{ taxi[1] }}</option>
+                      <option value="{{ taxi.id }}">{{ taxi.description }}</option>
                     {% endif %}
                   {% endfor %}
                   </select>
@@ -122,10 +122,10 @@
                   <span class="input-group-addon" id="category">Κατηγορία</span>
                   <select class="form-control" id="categorySelect" name="category">
                   {% for category in t_categories %}
-                    {% if (video[2]==category[0]) %}
-                      <option selected="selected" value="{{ category[0] }}">{{ category[1] }}</option>
+                    {% if (video.category_id==category.id) %}
+                      <option selected="selected" value="{{ category.id }}">{{ category.description }}</option>
                     {% else %}
-                      <option value="{{ category[0] }}">{{ category[1] }}</option>
+                      <option value="{{ category.id }}">{{ category.description }}</option>
                     {% endif %}
                   {% endfor %}
                   </select>
@@ -142,7 +142,7 @@
                 <div class="input-group">
                 Όλες οι λέξεις κλειδιά:<br>
                 {% for i in range(0, t_keywords|count) %}
-                  <button class="btn btn-primary" type="button">{{ t_keywords[i][1] }} <span class="badge">{{ t_keywords[i][2] }}</span></button>
+                  <button class="btn btn-primary" type="button">{{ t_keywords[i].description }}</button>
                 {% endfor %}
                 </div>
               </form>

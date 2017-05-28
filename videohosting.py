@@ -2,7 +2,7 @@
 import sqlite3, sys, string, os
 
 from flask import Flask
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -83,7 +83,8 @@ def category(category_id):
         tmp_vidkeys = video_keywords.query.filter_by(video_id=item.id)
         for tmp_vidkey in tmp_vidkeys:
             keyword = keywords.query.get(tmp_vidkey.keyword_id)
-            category_videos_keywords.append([item.id, keyword.id, keyword.description])
+            if (keyword!=None):
+                category_videos_keywords.append([item.id, keyword.id, keyword.description])
 
     return render_template('list-videos.html', category=category, videos=category_videos, video_keywords=category_videos_keywords, t_taxeis=taxeis.query.all())
 
@@ -98,13 +99,10 @@ def taxi(taxi_id):
         tmp_vidkeys = video_keywords.query.filter_by(video_id=item.id)
         for tmp_vidkey in tmp_vidkeys:
             keyword = keywords.query.get(tmp_vidkey.keyword_id)
-            taxi_videos_keywords.append([item.id, keyword.id, keyword.description])
+            if (keyword!=None):
+                taxi_videos_keywords.append([item.id, keyword.id, keyword.description])
 
     return render_template('list-videos.html', taxi=taxi, videos=taxi_videos, video_keywords=taxi_videos_keywords, t_categories=categories.query.all())
-
-@app.route('/edit/<id>')
-def edit(id):
-    return render_template('edit.html', video=getVideoFromId(id), keywords=getKeywordsFromVideoId(id), t_categories=categories, t_taxeis=taxeis, t_keywords=keywords)
 
 @app.route('/commit', methods=["POST"])
 def commit_edit_changes():
@@ -114,69 +112,84 @@ def commit_edit_changes():
     f_category = request.form.get('category')
     f_keywords = request.form.get('keywords')
 
-    cur.execute('select * from videos where `id`=%d' % int(f_id))
-    for row in cur.fetchall():
-        s_taxh = row[1]
-        s_category = row[2]
+    selected_video = videos.query.get(int(f_id))
+    s_taxh = selected_video.taxi_id
+    s_category = selected_video.category_id
 
     if (f_perigrafh!=""):
-        query = "update videos set notes='%s' where id=%d" % (f_perigrafh, int(f_id))
-        cur.execute(query)
+        selected_video.notes=f_perigrafh
+        db.session.commit()
 
     if (f_taxh!=s_taxh):
-        query = "update videos set taxi_id=%d where id=%d" % (int(f_taxh), int(f_id))
-        cur.execute(query)
+        selected_video.taxi_id=int(f_taxh)
+        db.session.commit()
 
     if (f_category!=s_category):
-        query = "update videos set category_id=%d where id=%d" % (int(f_category), int(f_id))
-        cur.execute(query)
+        selected_video.category_id=int(f_category)
+        db.session.commit()
 
     #keywords
-    cur_keywords = getKeywordsFromVideoId(int(f_id))
+    # Αρχικά βρίσκω τα ήδη αποθηκευμένα keywords του video
+    current_keywords=[]
+    tmp_vidkeys = video_keywords.query.filter_by(video_id=int(f_id))
+    for tmp_vidkey in tmp_vidkeys:
+        keyword = keywords.query.get(tmp_vidkey.keyword_id)
+        if (keyword!=None):
+            current_keywords.append([keyword.id, keyword.description])
+    # Μετά κάνω πεζά και strip από κενά τα νέα keywords
     f_keywords_lower = f_keywords.lower()
+    f_keywords_lower = f_keywords.strip()
+    # Αν ο τελευταίας χαρακτήρας είναι το κόμμα τότε πρέπει να φύγει για να μην έχω κενό keyword
+    if (f_keywords_lower.endswith(",")):
+        f_keywords_lower=f_keywords_lower[0:len(f_keywords_lower)-1]
+    print f_keywords_lower
     new_keywords = f_keywords_lower.split(',')
     for i in range(0, len(new_keywords)):
         new_keywords[i]=new_keywords[i].strip()
 
-
     for new_k in new_keywords:
         found_in_video=False
         # Αρχικά η αναζήτηση γίνεται μέσα στα ήδη υπάρχοντα keywords του video - αν φυσικά υπάρχουν
-        for old_k in cur_keywords:
+        for old_k in current_keywords:
             if (new_k==old_k[1]):
-                found_in_video=True # To keyword υπάρχει ήδη - απλά αλλάζει το flag
+                found_in_video=True # To keyword υπάρχει ήδη - απλά αλλάζει το flag found_in_video (δεν χρειάζεται άλλο aciton)
 
         # Αν όμως το keyword δεν υπάρχει μέσα στα ήδη υπάρχοντα του video, πρέπει πρώτα να αναζητήσω αν υπάρχει τέτοιo keyword ήδη ώστε να μην το ξαναδημιουργήσω
         if not found_in_video:
             found_in_db=False
-            for keyword in keywords: # Αναζήτηση μέσα σε  όλα τα keywords
-                if (keyword[1]==new_k):
-                    found_in_db=True # Υπάρχει ήδη στη ΒΔ μένει μόνο να δημιουργηθεί η συσχέτιση
-                    query = "insert into video_keywords values (null, %d, %d)" % (int(keyword[0]), int(f_id))
-                    cur.execute(query)
+            srch_keywords = keywords.query.filter_by(description=new_k) # Αναζήτηση μέσα σε  όλα τα keywords
+            if (srch_keywords.count()!=0):
+                found_in_db=True # Υπάρχει ήδη στη ΒΔ μένει μόνο να δημιουργηθεί η συσχέτιση
+                new_video_keyword = video_keywords(keyword_id=int(srch_keywords[0].id), video_id=int(f_id))
+                db.session.add(new_video_keyword)
+                db.session.commit()
             if not found_in_db: # Εισαγωγή νέου keyword και μετά της συσχέτισης
-                query1 = "insert into keywords values(null, '%s')" % new_k
-                cur.execute(query1)
-                new_keyword_id = cur.lastrowid
-                query2 = "insert into video_keywords values (null, %d, %d)" % (int(new_keyword_id), int(f_id))
-                cur.execute(query2)
-    # Τέλος ένας ακόμη έλεγχος - Αν κάποιο από τα αρχικά keywords δεν υπάρχει στα νέα, πρέπει να διαγραφεί.
-    for item in cur_keywords:
-        if item[1] not in new_keywords:
-            query = "delete from video_keywords where keyword_id=%d and video_id=%d" % (int(item[0]), int(f_id))
-            cur.execute(query)
-    # Διαγραφή ορφανών keywords
-    con.commit()
-    cur.execute("select * from keywords")
-    for row in cur.fetchall():
-        query = "select * from video_keywords where keyword_id=%d" % int(row[0])
-        cur.execute(query)
-        if (len(cur.fetchall())==0):
-            cur.execute("delete from keywords where id=%d" % int(row[0]))
+                new_keyword = keywords(description=new_k)
+                print new_keyword
+                db.session.add(new_keyword)
+                db.session.commit()
+                new_video_keyword = video_keywords(keyword_id=int(new_keyword.id), video_id=int(f_id))
+                db.session.add(new_video_keyword)
+                db.session.commit()
 
-    con.commit()
-    load_globals()
-    return render_template('error.html', id=f_id, perigrafh=f_perigrafh, taxh=f_taxh, category=f_category, keywords=f_keywords)
+    # Τέλος ένας ακόμη έλεγχος - Αν κάποιο από τα αρχικά keywords δεν υπάρχει στα νέα, πρέπει να διαγραφεί.
+    for item in current_keywords:
+        if item[1] not in new_keywords:
+            keyword = keywords.query.get(int(item[0]))
+            db.session.delete(keyword)
+            db.session.commit()
+
+    # Διαγραφή ορφανών keywords
+    all_keywords = keywords.query.all()
+    for row in all_keywords:
+        tmp_vidkeys = video_keywords.query.filter_by(keyword_id=row.id)
+        if (tmp_vidkeys.count()==0):
+            key = keywords.query.get(row.id)
+            db.session.delete(key)
+            db.session.commit()
+
+    flash('Τα στοιχεία του video ενημερώθηκαν με επιτυχία!')
+    return redirect('/video/'+f_id)
 
 @app.route('/video/<id>')
 def video(id):
@@ -185,6 +198,19 @@ def video(id):
     tmp_keywords=video_keywords.query.filter_by(video_id=int(id))
     for item in tmp_keywords:
         tmp_key=keywords.query.get(item.keyword_id)
-        f_keywords.append([tmp_key.id, tmp_key.description])
+        if (tmp_key!=None):
+            f_keywords.append([tmp_key.id, tmp_key.description])
 
     return render_template('video.html', video=video, keywords=f_keywords, t_categories=categories.query.all(), t_taxeis=taxeis.query.all())
+
+@app.route('/edit/<id>')
+def edit(id):
+    video=videos.query.get(int(id))
+    f_keywords=[]
+    tmp_keywords=video_keywords.query.filter_by(video_id=int(id))
+    for item in tmp_keywords:
+        tmp_key=keywords.query.get(item.keyword_id)
+        if (tmp_key!=None):
+            f_keywords.append([tmp_key.id, tmp_key.description])
+
+    return render_template('edit.html', video=video, keywords=f_keywords, t_categories=categories.query.all(), t_taxeis=taxeis.query.all(), t_keywords=keywords.query.all())
