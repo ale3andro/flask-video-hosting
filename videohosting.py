@@ -139,13 +139,18 @@ def commit_edit_changes():
     # Μετά κάνω πεζά και strip από κενά τα νέα keywords
     f_keywords_lower = f_keywords.lower()
     f_keywords_lower = f_keywords.strip()
+
     # Αν ο τελευταίας χαρακτήρας είναι το κόμμα τότε πρέπει να φύγει για να μην έχω κενό keyword
-    if (f_keywords_lower.endswith(",")):
+    while (f_keywords_lower.endswith(",")):
         f_keywords_lower=f_keywords_lower[0:len(f_keywords_lower)-1]
-    print f_keywords_lower
-    new_keywords = f_keywords_lower.split(',')
-    for i in range(0, len(new_keywords)):
-        new_keywords[i]=new_keywords[i].strip()
+
+    new_keywords = []
+    the_keywords = f_keywords_lower.split(',')
+    counter=0
+    for item in the_keywords:
+        if(item!=''):
+            new_keywords.append(item.strip())
+            counter+=1
 
     for new_k in new_keywords:
         found_in_video=False
